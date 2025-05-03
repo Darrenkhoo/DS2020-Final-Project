@@ -22,7 +22,7 @@ library(grid)
 ```
 
 ```{r ImportDataSet}
-data <- read_csv("../DS_FInal_Project/Cancer_Data.csv")
+data <- read_csv("Cancer_Data.csv")
 data_New <- data[1:(length(data)-1)]
 ```
 

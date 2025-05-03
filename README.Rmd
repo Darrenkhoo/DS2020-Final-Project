@@ -1,0 +1,221 @@
+---
+title: "DS2020 Final Project Report"
+author: "Hong Hao Khoo and Harsh Mishrikotkar"
+date: "2025-04-28"
+output: github_document
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rvest)
+library(tidyverse)
+library(ggplot2)
+library(stringi)
+library(ggpubr)
+library(grid)
+```
+
+# Benign or Malignant Cancer
+## Introduction
+Cancer is a group of diseases characterized by the uncontrolled growth and spread of abnormal cells in the body. Cancer, also known as tumor are often mixed up. A tumor is a lump or mass of tissue that forms when cells grow and divide too much or don’t die when they should. Scientifically, tumors can be categorized into benign or malignant. Benign tumors do not invade nearby tissues or spread to other parts of the body, whereas malignant tumors do. Malignant tumors are what we call cancer. If it is malignant, then it is a cancer otherwise it is not. For this project's purpose, we are going to stick with the word 'cancer' in place of 'tumor' as it is more familiarized, but we will specify benign or malignant when necessary. 
+
+Benign cancer are much more common and many are not recorded. It is estimated that 20 million malignant cancer are diagnosed each year and 100+ million for benign. When diagnosed with cancer but not knowing if it’s benign or malignant is a confusing and frightening moment - you're stuck waiting, hoping for good news but scared of the worst. So, in this project we aim to analyze a dataset containing records of patients diagnosed with cancer. Each patient is given an unique ID along with the type of cancer, benign or malignant. It also contains the visual characteristics of the cancer and a value for each of these characteristics. 
+
+Through the analysis of this dataset, we hope to find out:
+
+1. What are the average range of value for each characteristic for benign and malignant cancer?
+
+2. Is there a correlation between the characteristics and the type of cancer?
+
+3. Which characteristic is the most highly correlated and which is lowest to the type of cancer?
+
+4. Can we predict whether a cancer tumor is benign or malignant base on its characteristics?
+
+5. Is it possible to speed up the process of identifying whether a cancer is benign or malignant? 
+
+## Dataset
+The link to the dataset is https://www.kaggle.com/datasets/erdemtaha/cancer-data. The website contains a downloadable csv file, which is the cancer dataset. This dataset have 569 observations and 32 variables. 
+```{r}
+# Import dataset
+data <- read_csv("Cancer_Data.csv")
+data <- data[1:(length(data)-1)]
+
+# View dataset
+head(data, 10)
+```
+
+## Cleaning
+```{r}
+summary(data)
+
+str(data)
+
+# Create columns for diagnosis as factor and numeric
+dataClean <- data %>%
+  mutate(diagnosis_factor = factor(diagnosis, levels = c("B", "M"), labels = c("Benign", "Malignant")),
+         diagnosis_numeric = ifelse(diagnosis == "M", 1, 0))
+
+# Drop ID column
+dataClean <- dataClean %>% select(-id)
+
+# Check for any missing values in the rest of the dataset
+colSums(is.na(dataClean))
+```
+
+## Variables
+* id                        : Unique ID for patient
+* diagnosis                 : Benign or Malignant cancer
+* radius_mean               : Radius mean value
+* texture_mean              : Texture mean value
+* perimeter_mean            : Perimeter mean value
+* area_mean                 : Area mean value
+* smoothness_mean           : Smoothness mean value
+* compactness_mean          : Compactness mean value
+* concavity_mean            : Concavity mean value
+* concave points_mean       : Concave points mean value
+* symmetry_mean             : Symmetry mean value
+* fractal_dimension_mean    : Fractal dimension mean value
+* radius_se                 : Radius standard error value
+* texture_se                : Texture standard error value
+* perimeter_se              : Perimeter standard error value
+* area_se                   : Area standarad error value
+* smoothness_se             : Smoothness standard error value
+* compactness_se            : Compactness standard error value
+* concavity_se              : Concavity standard error value
+* concave points_se         : Concave points standard error value
+* symmetry_se               : Symmetry standard error value
+* fractal_dimension_se      : Fractal dimension standard error value
+* radius_worst              : Radius worst value
+* texture_worst             : Texture worst value
+* perimeter_worst           : Perimeter worst value
+* area_worst                : Area worst value
+* smoothness_worst          : Smoothness worst value
+* compactness_worst         : Compactness worst value
+* concavity_worst           : Concavity worst value
+* concave points_worst      : Concave points worst value
+* symmetry_worst            : Symmetry worst value
+* fractal_dimension_worst   : Fractal dimension worst value
+* diagnosis_factor          : Diagnosis as factor "B" and "M"
+* diagnosis_numeric         : Diagnosis as numeric 0 and 1
+
+## Results
+```{r}
+pairs(data_New[, 3:6], panel=function(x,y){
+  # Get a vector of colors for each point in the plot
+  colors <- ifelse(dataCleanw$diagnosis == 0, "red",
+                   ifelse(dataClean$diagnosis == 1, "green", "blue"))
+
+  # Plot the points with the corresponding colors
+  points(x, y, col = colors)
+})
+
+# Function to create a histogram for a single column
+create_histogram <- function(df, column_name) {
+  # Calculate appropriate number of bins using Sturges' rule as a starting point
+  # but capped between 10 and 30 bins
+  n_distinct <- length(unique(data[[column_name]]))
+  n_bins <- min(max(ceiling(log2(n_distinct) + 1), 10), 30)
+  
+  # Create histogram
+  p <- ggplot(df, aes(x = !!sym(column_name))) +
+    geom_histogram(bins = n_bins, 
+                   fill = "steelblue", 
+                   color = "black",
+                   alpha = 0.7) +
+    labs(title = column_name,
+         x = column_name,
+         y = "Frequency") +
+    theme_minimal() +
+    theme(plot.title = element_text(size = 10, face = "bold"),
+          axis.text.x = element_text(size = 8),
+          axis.text.y = element_text(size = 8),
+          axis.title = element_text(size = 9))
+  
+  # Add density curve for distributions with sufficient unique values
+  if (n_distinct > 10) {
+    p <- p + geom_density(aes(y = after_stat(count)), 
+                         color = "darkred", 
+                         linewidth = 1)
+  }
+  
+  return(p)
+}
+
+# Create histograms for all columns
+plot_list <- list()
+column_names <- names(dataClean)
+
+for (col_name in column_names) {
+  # Skip any non-numeric columns if they exist
+  if (!is.numeric(data_New[[col_name]])) {
+    cat("Skipping non-numeric column:", col_name, "\n")
+    next
+  }
+  
+  # Create and store the histogram
+  plot_list[[col_name]] <- create_histogram(dataClean, col_name)
+}
+
+# Arrange histograms in a grid, 8 plots per page
+plot_pages <- list()
+num_plots <- length(plot_list)
+plots_per_page <- 8
+num_pages <- ceiling(num_plots / plots_per_page)
+
+for (page in 1:num_pages) {
+  start_idx <- (page - 1) * plots_per_page + 1
+  end_idx <- min(page * plots_per_page, num_plots)
+  
+  if (start_idx <= num_plots) {
+    current_plots <- plot_list[start_idx:end_idx]
+    plot_names <- names(current_plots)
+    
+    # Create a title for each page
+    title <- textGrob(paste("Histogram Distributions - Page", page, "of", num_pages), 
+                     gp = gpar(fontsize = 14, fontface = "bold"))
+    
+    # Arrange plots in a grid
+    arranged_plots <- arrangeGrob(grobs = current_plots, 
+                                 ncol = 2,
+                                 top = title)
+    
+    # Store the arranged plots
+    plot_pages[[page]] <- arranged_plots
+    
+    # Display the page
+    grid.newpage()
+    grid.draw(arranged_plots)
+  }
+}
+
+
+# Basic statistics summary for each column
+stats_summary <- data.frame(
+  Column = character(),
+  Min = numeric(),
+  Q1 = numeric(),
+  Median = numeric(),
+  Mean = numeric(),
+  Q3 = numeric(),
+  Max = numeric(),
+  SD = numeric(),
+  stringsAsFactors = FALSE
+)
+
+for (col_name in names(dataClean)[sapply(data_New, is.numeric)]) {
+  col_data <- data_New[[col_name]]
+  stats_summary <- rbind(stats_summary, data.frame(
+    Column = col_name,
+    Min = min(col_data, na.rm = TRUE),
+    Q1 = quantile(col_data, 0.25, na.rm = TRUE),
+    Median = median(col_data, na.rm = TRUE),
+    Mean = mean(col_data, na.rm = TRUE),
+    Q3 = quantile(col_data, 0.75, na.rm = TRUE),
+    Max = max(col_data, na.rm = TRUE),
+    SD = sd(col_data, na.rm = TRUE)
+  ))
+}
+
+# Display summary statistics 
+print(stats_summary)
+```
