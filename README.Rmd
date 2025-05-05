@@ -67,7 +67,7 @@ dataClean <- data %>%
 # Drop ID column
 dataClean <- dataClean %>% select(-id)
 
-# Check for any missing values in the rest of the dataset
+# Check for any missing values in the rest of the data set
 colSums(is.na(dataClean))
 ```
 
@@ -108,7 +108,6 @@ colSums(is.na(dataClean))
 * diagnosis_numeric         : Diagnosis as numeric 0 and 1
 
 ## Results
-
 ### Visual 1 (Tumor Type Distribution Bar Plot)
 ```{r}
 # Show how many benign vs malignant cases there are
