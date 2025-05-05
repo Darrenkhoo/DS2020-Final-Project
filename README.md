@@ -3,56 +3,75 @@ DS2020 Final Project Report
 Hong Hao Khoo and Harsh Mishrikotkar
 2025-04-28
 
-# Benign or Malignant Cancer
+# Benign or Malignant Tumor
 
-## Introduction
+## Introduction/Background
 
-Cancer is a group of diseases characterized by the uncontrolled growth
-and spread of abnormal cells in the body. Cancer, also known as tumor
-are often mixed up. A tumor is a lump or mass of tissue that forms when
-cells grow and divide too much or don’t die when they should.
-Scientifically, tumors can be categorized into benign or malignant.
-Benign tumors do not invade nearby tissues or spread to other parts of
-the body, whereas malignant tumors do. Malignant tumors are what we call
-cancer. If it is malignant, then it is a cancer otherwise it is not. For
-this project’s purpose, we are going to stick with the word ‘cancer’ in
-place of ‘tumor’ as it is more familiarized, but we will specify benign
-or malignant when necessary.
+A tumor is a lump or mass of tissue that forms when cells grow and
+divide too much or don’t die when they should. The word tumor is often
+used interchangeably with cancer. Cancer is a group of diseases
+characterized by the uncontrolled growth and spread of abnormal cells in
+the body. Scientifically, tumors can be categorized into benign or
+malignant. Benign tumors do not invade nearby tissues or spread to other
+parts of the body, whereas malignant tumors do. Malignant tumors are
+what we call cancer. If it is malignant, then it is a cancer otherwise
+it is not.
 
-Benign cancer are much more common and many are not recorded. It is
-estimated that 20 million malignant cancer are diagnosed each year and
-100+ million for benign. When diagnosed with cancer but not knowing if
-it’s benign or malignant is a confusing and frightening moment - you’re
-stuck waiting, hoping for good news but scared of the worst. So, in this
-project we aim to analyze a dataset containing records of patients
-diagnosed with cancer. Each patient is given an unique ID along with the
-type of cancer, benign or malignant. It also contains the visual
-characteristics of the cancer and a value for each of these
-characteristics.
+After a patient is diagnosed with a tumor, a crucial next step is
+determining whether it is benign or malignant. This is often done
+through a biopsy, which can be invasive, painful, and stressful. The
+goal of this project is to explore whether measurable tumor
+characteristics can help increase the chances of identifying the tumor
+type through imaging techniques and improve the accuracy of that
+identification. By analyzing features such as size, shape, and texture,
+we aim to support the development of more accessible, non-invasive
+diagnostic tools that can complement or even reduce the reliance on
+biopsies.
 
-Through the analysis of this dataset, we hope to find out:
+## Project Goals and Questions
+
+When diagnosed with tumor but not knowing if it’s benign or malignant is
+a confusing and frightening moment - you’re stuck waiting, hoping for
+good news but scared of the worst. In this project, we aim to analyze a
+data set containing records of patients diagnosed with tumors. Each
+patient is assigned a unique ID and labeled with the tumor type—either
+benign or malignant. The data set also includes various visual
+characteristics of the tumors, each represented by a corresponding
+numerical value.
+
+Through the analysis of this data set, we hope to find out:
 
 1.  What are the average range of value for each characteristic for
-    benign and malignant cancer?
+    benign and malignant tumor?
 
 2.  Is there a correlation between the characteristics and the type of
-    cancer?
+    tumor?
 
 3.  Which characteristic is the most highly correlated and which is
-    lowest to the type of cancer?
+    lowest to the type of tumor?
 
-4.  Can we predict whether a cancer tumor is benign or malignant base on
-    its characteristics?
+4.  Can we predict whether a tumor is benign or malignant base on its
+    characteristics?
 
 5.  Is it possible to speed up the process of identifying whether a
-    cancer is benign or malignant?
+    tumor is benign or malignant?
 
-## Dataset
+6.  Can we increase chances of identifying tumor type from imaging
+    techniques?
 
-The link to the dataset is
+7.  Can we increase accuracy of identifying tumor type from imaging
+    techniques?
+
+## Data set
+
+The link to the data set is
 <https://www.kaggle.com/datasets/erdemtaha/cancer-data>. The website
-contains a downloadable csv file, which is the cancer dataset. This
-dataset have 569 observations and 32 variables.
+contains a downloadable csv file, which is the tumor dataset. This
+dataset have 569 observations and 32 variables. The data set contain
+records of patients diagnosed with tumor. Each patient is given an
+unique ID along with the type of tumor, benign or malignant. It also
+contains the visual characteristics of the tumor and a value for each of
+these characteristics.
 
 ``` r
 # Import dataset
@@ -105,7 +124,7 @@ head(data, 10)
     ## #   symmetry_se <dbl>, fractal_dimension_se <dbl>, radius_worst <dbl>,
     ## #   texture_worst <dbl>, perimeter_worst <dbl>, area_worst <dbl>, …
 
-## Cleaning
+## Cleaning & Observation
 
 ``` r
 summary(data)
@@ -207,10 +226,9 @@ str(data)
     ##  $ fractal_dimension_worst: num [1:568] 0.1189 0.089 0.0876 0.173 0.0768 ...
 
 ``` r
-# Create columns for diagnosis as factor and numeric
+# Convert diagnosis to factor
 dataClean <- data %>%
-  mutate(diagnosis_factor = factor(diagnosis, levels = c("B", "M"), labels = c("Benign", "Malignant")),
-         diagnosis_numeric = ifelse(diagnosis == "M", 1, 0))
+  mutate(diagnosis = factor(diagnosis, levels = c("B", "M"), labels = c("Benign", "Malignant")))
 
 # Drop ID column
 dataClean <- dataClean %>% select(-id)
@@ -239,44 +257,380 @@ colSums(is.na(dataClean))
     ##                       0                       0                       0 
     ##         concavity_worst    concave points_worst          symmetry_worst 
     ##                       0                       0                       0 
-    ## fractal_dimension_worst        diagnosis_factor       diagnosis_numeric 
-    ##                       0                       0                       0
+    ## fractal_dimension_worst 
+    ##                       0
 
 ## Variables
 
-- id :
-- diagnosis :
-- radius_mean :
-- texture_mean :
-- perimeter_mean :
-- area_mean :
-- smoothness_mean :
-- compactness_mean :
-- concavity_mean :
-- concave points_mean :
-- symmetry_mean :
-- fractal_dimension_mean :
-- radius_se :
-- texture_se :
-- perimeter_se :
-- area_se :
-- smoothness_se :
-- compactness_se :
-- concavity_se :
-- concave points_se :
-- symmetry_se :
-- fractal_dimension_se :
-- radius_worst :
-- texture_worst :
-- perimeter_worst :
-- area_worst :
-- smoothness_worst :
-- compactness_worst :
-- concavity_worst :
-- concave points_worst :
-- symmetry_worst :
-- fractal_dimension_worst :
-- diagnosis_facto :
-- diagnosis_numeric :
+- id : Unique ID for patient
+- diagnosis : Benign or Malignant cancer
+- radius_mean : Radius mean value
+- texture_mean : Texture mean value
+- perimeter_mean : Perimeter mean value
+- area_mean : Area mean value
+- smoothness_mean : Smoothness mean value
+- compactness_mean : Compactness mean value
+- concavity_mean : Concavity mean value
+- concave points_mean : Concave points mean value
+- symmetry_mean : Symmetry mean value
+- fractal_dimension_mean : Fractal dimension mean value
+- radius_se : Radius standard error value
+- texture_se : Texture standard error value
+- perimeter_se : Perimeter standard error value
+- area_se : Area standarad error value
+- smoothness_se : Smoothness standard error value
+- compactness_se : Compactness standard error value
+- concavity_se : Concavity standard error value
+- concave points_se : Concave points standard error value
+- symmetry_se : Symmetry standard error value
+- fractal_dimension_se : Fractal dimension standard error value
+- radius_worst : Radius worst value
+- texture_worst : Texture worst value
+- perimeter_worst : Perimeter worst value
+- area_worst : Area worst value
+- smoothness_worst : Smoothness worst value
+- compactness_worst : Compactness worst value
+- concavity_worst : Concavity worst value
+- concave points_worst : Concave points worst value
+- symmetry_worst : Symmetry worst value
+- fractal_dimension_worst : Fractal dimension worst value
+- diagnosis_factor : Diagnosis as factor “B” and “M”
+- diagnosis_numeric : Diagnosis as numeric 0 and 1
 
 ## Results
+
+### Visual 1 (Tumor Type Distribution Bar Plot)
+
+``` r
+# Show how many benign vs malignant cases there are
+ggplot(dataClean, aes(x = diagnosis)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Distribution of Tumor Types", x = "Diagnosis", y = "Count") +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+To understand the class distribution in our dataset, we created a bar
+plot comparing the number of benign and malignant tumors. This
+visualization revealed that benign tumors are more common in the dataset
+than malignant ones.
+
+This class imbalance is important to note, as it may affect the
+performance of classification models. Models trained on imbalanced data
+might become biased toward predicting the majority class (benign), so
+additional techniques like resampling or adjusting evaluation metrics
+may be considered in future modeling steps.
+
+### Visual 2 (Boxplot: Characteristics by Cancer Type)
+
+``` r
+# Select all mean columns + diagnosis
+mean_data <- dataClean %>%
+  select(diagnosis, ends_with("_mean"))
+
+# First plot: all mean features EXCEPT area_mean
+mean_data %>%
+  select(-area_mean) %>%
+  pivot_longer(-diagnosis, names_to = "Feature", values_to = "Value") %>%
+  ggplot(aes(x = Feature, y = Value, fill = diagnosis)) +
+  geom_boxplot() +
+  labs(title = "Mean Characteristics (Excluding Area) by Diagnosis",
+       x = "Feature", y = "Value") +
+  scale_fill_manual(values = c("Benign" = "skyblue", "Malignant" = "salmon")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+``` r
+# Second plot: only area_mean
+ggplot(mean_data, aes(x = diagnosis, y = area_mean, fill = diagnosis)) +
+  geom_boxplot() +
+  labs(title = "Area Mean by Diagnosis", x = "Diagnosis", y = "Area Mean") +
+  scale_fill_manual(values = c("Benign" = "skyblue", "Malignant" = "salmon")) +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
+
+To explore which tumor characteristics differ between benign and
+malignant cases, we analyzed all `*_mean` features using side-by-side
+boxplots. The first plot compares all mean features except `area_mean`,
+which was plotted separately due to its significantly larger scale and
+would otherwise cause the remaining features to appear compressed and
+unreadable when plotted together.
+
+From the visualizations, we observed that malignant tumors tend to have
+higher values for several key features, including `radius_mean`,
+`perimeter_mean`, `concavity_mean`, and `concave points_mean`. These
+features show a clear upward shift in the boxplots for malignant cases,
+suggesting that tumors with more aggressive or irregular growth patterns
+(such as larger size or more concave points) are more likely to be
+cancerous.
+
+In contrast, several other features — including `compactness_mean`,
+`fractal_dimension_mean`, `smoothness_mean`, and `symmetry_mean` —
+appear tightly clustered near zero in the boxplot. Their small numeric
+ranges make it difficult to visually distinguish between benign and
+malignant cases. While these features may still contain subtle patterns,
+their limited variability and overlap in values suggest they may not be
+as strong or reliable for classification without additional
+transformation or scaling. Simply speaking, these small-valued features
+may not provide enough contrast between benign and malignant tumors,
+making them weaker predictors on their own. They could still be useful
+when combined with other features, but by themselves they are not strong
+indicators of diagnosis.
+
+The separate boxplot for `area_mean` further reinforces this trend —
+malignant tumors have a much larger average area compared to benign
+ones. This aligns with biological expectations, as malignant tumors
+often grow more rapidly and invade surrounding tissue, resulting in a
+greater area.
+
+These results support our research objective by identifying features
+that significantly differ between benign and malignant tumors. Such
+insights are crucial in building predictive models that can aid in early
+and accurate cancer diagnosis based on measurable tumor attributes.
+
+### Visual 3 (Histogram: Top 5 Features)
+
+``` r
+# List of top features to visualize
+top_features <- c("radius_mean", "perimeter_mean", "area_mean", 
+                  "concavity_mean", "concave points_mean")
+
+# Loop through each feature and plot histogram
+for (feature in top_features) {
+  p <- ggplot(dataClean, aes(x = .data[[feature]], fill = diagnosis)) +
+    geom_histogram(position = "identity", alpha = 0.6, bins = 30) +
+    labs(title = paste("Distribution of", feature, "by Diagnosis"),
+         x = feature, y = "Count") +
+    scale_fill_manual(values = c("Benign" = "skyblue", "Malignant" = "salmon")) +
+    theme_minimal() +
+    theme(legend.position = "top")
+
+  print(p)
+}
+```
+
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-5-3.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-5-4.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-5-5.png)<!-- -->
+
+The following set of histograms displays the distribution of five
+selected tumor characteristics (`radius_mean`, `perimeter_mean`,
+`area_mean`, `concavity_mean`, and `concave points_mean`) for benign and
+malignant tumors. Each plot shows the number of tumors (y-axis) falling
+within specific value ranges of a given feature (x-axis), with colors
+distinguishing the diagnosis: blue for benign and red for malignant.
+
+These five features were chosen based on earlier boxplot analysis, where
+they demonstrated the most significant differences between benign and
+malignant groups.
+
+The histograms reveal clear distribution shifts between benign and
+malignant tumors. For instance, the `radius_mean`, `perimeter_mean`, and
+`area_mean` histograms show that malignant tumors generally have larger
+values than benign ones, with minimal overlap. This aligns with
+biological expectations that malignant tumors tend to grow larger and
+invade surrounding tissue more aggressively.
+
+Similarly, `concavity_mean` and `concave points_mean` — both indicators
+of irregular tumor shape — are skewed toward higher values for malignant
+tumors. Benign tumors, on the other hand, cluster near lower values for
+these features, suggesting smoother and less complex tumor boundaries.
+
+These histograms visually reinforce the idea that malignant tumors are
+not only larger but also more structurally irregular, and that these
+characteristics can be used as key indicators in distinguishing tumor
+types. The distinct separation in their distributions provides valuable
+insight into the measurable differences that can aid in accurate
+diagnosis.
+
+### Visual 4 (Feature Correlation Heatmap)
+
+``` r
+# Convert diagnosis to numeric
+dataClean$diagnosis_num <- ifelse(dataClean$diagnosis == "Malignant", 1, 0)
+
+# Select numeric features (excluding the original diagnosis factor)
+numeric_features <- select_if(dataClean, is.numeric)
+
+# Compute correlation with diagnosis
+cor_with_diag <- cor(numeric_features, use = "complete.obs")[, "diagnosis_num"]
+cor_df <- data.frame(Feature = names(cor_with_diag), Correlation = cor_with_diag)
+
+# Sort by absolute correlation
+cor_df <- cor_df %>% arrange(desc(abs(Correlation)))
+
+ggplot(cor_df, aes(x = reorder(Feature, Correlation), y = Correlation)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Correlation of Features with Diagnosis (Malignant = 1, Benign = 0)",
+       x = "Feature", y = "Pearson Correlation") +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+The bar plot above visualizes the Pearson correlation between each
+numeric feature and the tumor diagnosis (where `0 = Benign` and
+`1 = Malignant`). Each bar represents a feature, and the length of the
+bar reflects how strongly that feature is linearly associated with the
+likelihood of a tumor being malignant. Features with higher positive
+correlation values are more likely to be found in malignant tumors,
+while features with near-zero correlation show little to no relationship
+with diagnosis.
+
+From the plot, we observe that features such as `concave points_worst`,
+`perimeter_worst`, and `radius_worst` exhibit the strongest positive
+correlations with malignancy. This suggests that tumors with larger
+sizes and more irregular shapes (as captured by these features) are more
+likely to be malignant. In contrast, features like `smoothness_se`,
+`fractal_dimension_mean`, and `symmetry_se` have very low correlation
+values, indicating they are poor predictors for tumor classification in
+this dataset.
+
+## Simple model
+
+``` r
+# Split data
+set.seed(42)
+train_idx <- createDataPartition(dataClean$diagnosis_num, p = 0.8, list = FALSE)
+train_data <- dataClean[train_idx, ]
+test_data <- dataClean[-train_idx, ]
+
+# Train logistic regression using top 5 features
+log_model <- glm(diagnosis_num ~ radius_mean + perimeter_mean + area_mean + 
+                   concavity_mean + `concave points_mean`, 
+                 data = train_data, family = "binomial")
+```
+
+    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+``` r
+summary(log_model)
+```
+
+    ## 
+    ## Call:
+    ## glm(formula = diagnosis_num ~ radius_mean + perimeter_mean + 
+    ##     area_mean + concavity_mean + `concave points_mean`, family = "binomial", 
+    ##     data = train_data)
+    ## 
+    ## Coefficients:
+    ##                       Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)            6.12554    8.17788   0.749   0.4538    
+    ## radius_mean           -2.12329    2.33922  -0.908   0.3640    
+    ## perimeter_mean        -0.01753    0.27447  -0.064   0.9491    
+    ## area_mean              0.03316    0.01403   2.364   0.0181 *  
+    ## concavity_mean        -2.10115    6.42815  -0.327   0.7438    
+    ## `concave points_mean` 91.97885   20.38786   4.511 6.44e-06 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for binomial family taken to be 1)
+    ## 
+    ##     Null deviance: 609.93  on 454  degrees of freedom
+    ## Residual deviance: 164.65  on 449  degrees of freedom
+    ## AIC: 176.65
+    ## 
+    ## Number of Fisher Scoring iterations: 8
+
+``` r
+# Predict probabilities
+pred_probs <- predict(log_model, newdata = test_data, type = "response")
+
+# Convert probabilities to class labels
+pred_class <- ifelse(pred_probs > 0.5, 1, 0)
+
+# Confusion Matrix
+confusionMatrix(factor(pred_class), factor(test_data$diagnosis_num), 
+                positive = "1")
+```
+
+    ## Confusion Matrix and Statistics
+    ## 
+    ##           Reference
+    ## Prediction  0  1
+    ##          0 75  5
+    ##          1  5 28
+    ##                                           
+    ##                Accuracy : 0.9115          
+    ##                  95% CI : (0.8433, 0.9567)
+    ##     No Information Rate : 0.708           
+    ##     P-Value [Acc > NIR] : 1.288e-07       
+    ##                                           
+    ##                   Kappa : 0.786           
+    ##                                           
+    ##  Mcnemar's Test P-Value : 1               
+    ##                                           
+    ##             Sensitivity : 0.8485          
+    ##             Specificity : 0.9375          
+    ##          Pos Pred Value : 0.8485          
+    ##          Neg Pred Value : 0.9375          
+    ##              Prevalence : 0.2920          
+    ##          Detection Rate : 0.2478          
+    ##    Detection Prevalence : 0.2920          
+    ##       Balanced Accuracy : 0.8930          
+    ##                                           
+    ##        'Positive' Class : 1               
+    ## 
+
+``` r
+# ROC Curve and AUC
+roc_obj <- roc(test_data$diagnosis_num, pred_probs)
+```
+
+    ## Setting levels: control = 0, case = 1
+
+    ## Setting direction: controls < cases
+
+``` r
+plot(roc_obj, main = "ROC Curve for Logistic Regression")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+``` r
+auc(roc_obj)
+```
+
+    ## Area under the curve: 0.9833
+
+To evaluate how well the selected tumor characteristics can classify
+cancer as benign or malignant, we trained a logistic regression model
+using the five most correlated features identified during EDA:
+`radius_mean`, `perimeter_mean`, `area_mean`, `concavity_mean`, and
+`concave points_mean`. These features were chosen based on earlier
+boxplots and correlation plots, where they showed clear separation
+between the two diagnosis groups.
+
+The model achieved a high accuracy of 91.15%, with strong sensitivity
+(84.85%) and specificity (93.75%), indicating that it correctly
+identifies both malignant and benign cases in most situations. The ROC
+curve further supports the model’s performance, with an AUC (Area Under
+the Curve) of 0.9833, which is considered excellent and demonstrates the
+model’s strong discriminative power.
+
+These results reinforce the potential of using imaging-derived features
+to predict cancer type, offering a less invasive and more accessible
+alternative to biopsy. While this model is simple, it shows that
+selected features like tumor size and shape irregularities are strong
+indicators and could support clinical decision-making when paired with
+other diagnostic tools.
+
+## Conclusion
+
+In this project, we explored a dataset of tumor diagnoses to determine
+whether key visual characteristics could reliably distinguish between
+benign and malignant cases. Through data cleaning, exploratory analysis,
+and logistic regression modeling, we identified five features,
+`radius_mean`, `perimeter_mean`, `area_mean`, `concavity_mean`, and
+`concave points_mean` as the most informative predictors. Using these,
+our model achieved high accuracy, strong sensitivity and specificity,
+and an excellent AUC score. These results suggest that certain tumor
+features visible in medical imaging carry significant predictive value.
+While further validation and more complex models could enhance
+performance, this study highlights the potential of data-driven
+approaches to support clinical diagnosis in a non-invasive way.
