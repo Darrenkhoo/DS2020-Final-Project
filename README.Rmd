@@ -16,6 +16,10 @@ library(grid)
 library(corrplot)
 library(caret)
 library(pROC)
+library(readr)
+library(stringr)
+library(dplyr)
+library(gridExtra)
 ```
 
 # Benign or Malignant Tumor
@@ -47,7 +51,7 @@ Through the analysis of this data set, we hope to find out:
 The link to the data set is https://www.kaggle.com/datasets/erdemtaha/cancer-data. The website contains a downloadable csv file, which is the tumor dataset. This dataset have 569 observations and 32 variables. The data set contain records of patients diagnosed with tumor. Each patient is given an unique ID along with the type of tumor, benign or malignant. It also contains the visual characteristics of the tumor and a value for each of these characteristics.  
 ```{r}
 # Import dataset
-data <- read_csv("Cancer_Data.csv")
+data <- read_csv("../DS_FInal_Project/Cancer_Data.csv")
 data <- data[1:(length(data)-1)]
 
 # View dataset
@@ -61,7 +65,7 @@ summary(data)
 str(data)
 
 # Convert diagnosis to factor
-dataClean <- data %>%
+dataClean <- data %>% 
   mutate(diagnosis = factor(diagnosis, levels = c("B", "M"), labels = c("Benign", "Malignant")))
 
 # Drop ID column
@@ -107,6 +111,40 @@ colSums(is.na(dataClean))
 * diagnosis_factor          : Diagnosis as factor "B" and "M"
 * diagnosis_numeric         : Diagnosis as numeric 0 and 1
 
+```{r}
+# Basic statistics summary for each column
+stats_summary <- data.frame(
+  Column = character(),
+  Min = numeric(),
+  Q1 = numeric(),
+  Median = numeric(),
+  Mean = numeric(),
+  Q3 = numeric(),
+  Max = numeric(),
+  SD = numeric(),
+  stringsAsFactors = FALSE
+)
+
+for (col_name in names(dataClean)[sapply(dataClean, is.numeric)]) {
+  col_data <- dataClean[[col_name]]
+  stats_summary <- rbind(stats_summary, data.frame(
+    Column = col_name,
+    Min = min(col_data, na.rm = TRUE),
+    Q1 = quantile(col_data, 0.25, na.rm = TRUE),
+    Median = median(col_data, na.rm = TRUE),
+    Mean = mean(col_data, na.rm = TRUE),
+    Q3 = quantile(col_data, 0.75, na.rm = TRUE),
+    Max = max(col_data, na.rm = TRUE),
+    SD = sd(col_data, na.rm = TRUE)
+  ))
+}
+
+# Display summary statistics 
+print(stats_summary)
+```
+
+These are the summary Statistics for the coloumns, in our data set.
+
 ## Results
 
 ### Visual 1 (Tumor Type Distribution Bar Plot)
@@ -150,6 +188,73 @@ ggplot(mean_data, aes(x = diagnosis, y = area_mean, fill = diagnosis)) +
 
 To explore which tumor characteristics differ between benign and malignant cases, we analyzed all `*_mean` features using side-by-side boxplots. The first plot compares all mean features except `area_mean`, which was plotted separately due to its significantly larger scale and would otherwise cause the remaining features to appear compressed and unreadable when plotted together.
 
+```{r fig.width=15, fig.height=45}
+# Function to create a histogram with diagnosis coloring
+create_histogram_by_diagnosis <- function(df, column_name) {
+  # Calculate appropriate number of bins using Sturges' rule as a starting point
+  # but capped between 10 and 30 bins
+  n_distinct <- length(unique(df[[column_name]]))
+  n_bins <- min(max(ceiling(log2(n_distinct) + 1), 10), 30)
+  
+  # Create histogram with diagnosis coloring
+  p <- ggplot(df, aes(x = !!sym(column_name), fill = factor(diagnosis))) +
+    geom_histogram(bins = n_bins, 
+                   color = "black",
+                   alpha = 0.7,
+                   position = "identity") +
+    scale_fill_manual(values = c("Benign" = "green", "Malignant" = "red"),
+                      labels = c("0" = "Benign", "1" = "Malignant"),
+                      name = "Diagnosis") +
+    labs(title = column_name,
+         x = column_name,
+         y = "Frequency") +
+    theme_minimal() +
+    theme(plot.title = element_text(size = 10, face = "bold"),
+          axis.text.x = element_text(size = 8),
+          axis.text.y = element_text(size = 8),
+          axis.title = element_text(size = 9),
+          legend.position = "bottom",
+          legend.title = element_text(size = 9),
+          legend.text = element_text(size = 8))
+  
+  return(p)
+}
+
+# Create histograms for all columns with diagnosis coloring
+plot_list <- list()
+column_names <- names(dataClean)
+
+for (col_name in column_names) {
+  # Skip the diagnosis column itself and any non-numeric columns
+  if (col_name == "diagnosis" || !is.numeric(dataClean[[col_name]])) {
+    cat("Skipping column:", col_name, "\n")
+    next
+  }
+  
+  # Create and store the histogram
+  plot_list[[col_name]] <- create_histogram_by_diagnosis(dataClean, col_name)
+}
+
+# Arrange all histograms in a single grid with 2 columns
+# Calculate the height needed based on number of plots
+num_plots <- length(plot_list)
+grid_height <- ceiling(num_plots/2) * 3
+
+# Create a title for the grid
+title <- textGrob("Histogram Distributions by Diagnosis", 
+                 gp = gpar(fontsize = 14, fontface = "bold"))
+
+# Arrange all plots in a grid with 2 columns
+arranged_plots <- arrangeGrob(grobs = plot_list, 
+                             ncol = 2,
+                             top = title)
+
+# Display the grid (may be very tall depending on number of features)
+grid.newpage()
+grid.draw(arranged_plots)
+```
+These Graphs are Just genral Histogrmas for the distributions of Benign and Malignant Cancer for all of the columns. We noticed that the graph with the biggest seperation of bening and malignant was the 'concave points_wurst', but when creating a diagnosis it is unrealistic to be able to use this as a variable because the only way to find a '*_worst' would be to check each and every cancer cell, which is unrealistic in a real life situation.
+
 From the visualizations, we observed that malignant tumors tend to have higher values for several key features, including `radius_mean`, `perimeter_mean`, `concavity_mean`, and `concave points_mean`. These features show a clear upward shift in the boxplots for malignant cases, suggesting that tumors with more aggressive or irregular growth patterns (such as larger size or more concave points) are more likely to be cancerous.
 
 In contrast, several other features — including `compactness_mean`, `fractal_dimension_mean`, `smoothness_mean`, and `symmetry_mean` — appear tightly clustered near zero in the boxplot. Their small numeric ranges make it difficult to visually distinguish between benign and malignant cases. While these features may still contain subtle patterns, their limited variability and overlap in values suggest they may not be as strong or reliable for classification without additional transformation or scaling. Simply speaking, these small-valued features may not provide enough contrast between benign and malignant tumors, making them weaker predictors on their own. They could still be useful when combined with other features, but by themselves they are not strong indicators of diagnosis.
@@ -157,6 +262,23 @@ In contrast, several other features — including `compactness_mean`, `fractal_d
 The separate boxplot for `area_mean` further reinforces this trend — malignant tumors have a much larger average area compared to benign ones. This aligns with biological expectations, as malignant tumors often grow more rapidly and invade surrounding tissue, resulting in a greater area.
 
 These results support our research objective by identifying features that significantly differ between benign and malignant tumors. Such insights are crucial in building predictive models that can aid in early and accurate cancer diagnosis based on measurable tumor attributes.
+
+```{r fig.width=15, fig.height=15}
+dataPairedPlot <- dataClean |>
+  mutate(diagnosis = recode(diagnosis, "Benign" = 0, "Malignant" = 1))
+
+pairs(dataPairedPlot[, 3:12], panel=function(x,y){
+  # Get a vector of colors for each point in the plot
+  colors <- ifelse(dataPairedPlot$diagnosis == 0, "green",
+                   ifelse(dataPairedPlot$diagnosis == 1, "red", "blue"))
+
+  # Plot the points with the corresponding colors
+  points(x, y, col = colors)
+})
+```
+
+We looked at the Paired Plots of the '*_mean' coloumns with points seperated by colour based on <span style="color:green;"> Benign </span> or <span style="color:red;"> Malignant </span> to see what relationships between which variables had some corelation to weather or not the cancer was Benign or Malignant.
+
 
 ### Visual 3 (Histogram: Top 5 Features)
 ```{r}
