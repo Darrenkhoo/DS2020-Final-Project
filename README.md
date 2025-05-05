@@ -233,7 +233,7 @@ dataClean <- data %>%
 # Drop ID column
 dataClean <- dataClean %>% select(-id)
 
-# Check for any missing values in the rest of the dataset
+# Check for any missing values in the rest of the data set
 colSums(is.na(dataClean))
 ```
 
@@ -262,7 +262,6 @@ colSums(is.na(dataClean))
 
 ## Variables
 
-- id : Unique ID for patient
 - diagnosis : Benign or Malignant cancer
 - radius_mean : Radius mean value
 - texture_mean : Texture mean value
@@ -294,8 +293,105 @@ colSums(is.na(dataClean))
 - concave points_worst : Concave points worst value
 - symmetry_worst : Symmetry worst value
 - fractal_dimension_worst : Fractal dimension worst value
-- diagnosis_factor : Diagnosis as factor “B” and “M”
-- diagnosis_numeric : Diagnosis as numeric 0 and 1
+
+## Statistics Summary
+
+``` r
+# Basic statistics summary for each column
+stats_summary <- data.frame(
+  Column = character(),
+  Min = numeric(),
+  Q1 = numeric(),
+  Median = numeric(),
+  Mean = numeric(),
+  Q3 = numeric(),
+  Max = numeric(),
+  SD = numeric(),
+  stringsAsFactors = FALSE
+)
+
+for (col_name in names(dataClean)[sapply(dataClean, is.numeric)]) {
+  col_data <- dataClean[[col_name]]
+  stats_summary <- rbind(stats_summary, data.frame(
+    Column = col_name,
+    Min = min(col_data, na.rm = TRUE),
+    Q1 = quantile(col_data, 0.25, na.rm = TRUE),
+    Median = median(col_data, na.rm = TRUE),
+    Mean = mean(col_data, na.rm = TRUE),
+    Q3 = quantile(col_data, 0.75, na.rm = TRUE),
+    Max = max(col_data, na.rm = TRUE),
+    SD = sd(col_data, na.rm = TRUE)
+  ))
+}
+
+# Display summary statistics 
+print(stats_summary)
+```
+
+    ##                        Column       Min          Q1      Median         Mean
+    ## 25%               radius_mean 6.981e+00 1.17075e+01  13.3750000 1.413850e+01
+    ## 25%1             texture_mean 9.710e+00 1.61700e+01  18.8350000 1.928040e+01
+    ## 25%2           perimeter_mean 4.379e+01 7.52000e+01  86.2900000 9.204658e+01
+    ## 25%3                area_mean 1.435e+02 4.20300e+02 551.4000000 6.557234e+02
+    ## 25%4          smoothness_mean 6.251e-02 8.64000e-02   0.0958950 9.643727e-02
+    ## 25%5         compactness_mean 1.938e-02 6.51750e-02   0.0931250 1.044479e-01
+    ## 25%6           concavity_mean 0.000e+00 2.95750e-02   0.0615450 8.895565e-02
+    ## 25%7      concave points_mean 0.000e+00 2.03475e-02   0.0336000 4.900527e-02
+    ## 25%8            symmetry_mean 1.060e-01 1.61975e-01   0.1792500 1.812014e-01
+    ## 25%9   fractal_dimension_mean 4.996e-02 5.76975e-02   0.0615450 6.280458e-02
+    ## 25%10               radius_se 1.115e-01 2.32375e-01   0.3239500 4.052063e-01
+    ## 25%11              texture_se 3.602e-01 8.33150e-01   1.1080000 1.216482e+00
+    ## 25%12            perimeter_se 7.570e-01 1.60500e+00   2.2855000 2.866619e+00
+    ## 25%13                 area_se 6.802e+00 1.78500e+01  24.5650000 4.037438e+01
+    ## 25%14           smoothness_se 1.713e-03 5.16625e-03   0.0063745 7.040718e-03
+    ## 25%15          compactness_se 2.252e-03 1.31325e-02   0.0204600 2.551479e-02
+    ## 25%16            concavity_se 0.000e+00 1.50975e-02   0.0259200 3.194987e-02
+    ## 25%17       concave points_se 0.000e+00 7.66275e-03   0.0109500 1.181690e-02
+    ## 25%18             symmetry_se 7.882e-03 1.51275e-02   0.0187250 2.053135e-02
+    ## 25%19    fractal_dimension_se 8.948e-04 2.24450e-03   0.0031955 3.796685e-03
+    ## 25%20            radius_worst 7.930e+00 1.30250e+01  14.9700000 1.628118e+01
+    ## 25%21           texture_worst 1.202e+01 2.10750e+01  25.4050000 2.566896e+01
+    ## 25%22         perimeter_worst 5.041e+01 8.41475e+01  97.6650000 1.073459e+02
+    ## 25%23              area_worst 1.852e+02 5.15675e+02 686.5500000 8.816606e+02
+    ## 25%24        smoothness_worst 7.117e-02 1.16600e-01   0.1313500 1.324433e-01
+    ## 25%25       compactness_worst 2.729e-02 1.47575e-01   0.2130000 2.545992e-01
+    ## 25%26         concavity_worst 0.000e+00 1.15925e-01   0.2274500 2.726677e-01
+    ## 25%27    concave points_worst 0.000e+00 6.49675e-02   0.1000150 1.148080e-01
+    ## 25%28          symmetry_worst 1.565e-01 2.50350e-01   0.2820500 2.900808e-01
+    ## 25%29 fractal_dimension_worst 5.504e-02 7.14675e-02   0.0800500 8.396968e-02
+    ##                Q3       Max           SD
+    ## 25%   1.57975e+01 2.811e+01 3.516986e+00
+    ## 25%1  2.17850e+01 3.928e+01 4.299166e+00
+    ## 25%2  1.04150e+02 1.885e+02 2.424982e+01
+    ## 25%3  7.84150e+02 2.501e+03 3.516606e+02
+    ## 25%4  1.05325e-01 1.634e-01 1.395600e-02
+    ## 25%5  1.30425e-01 3.454e-01 5.279766e-02
+    ## 25%6  1.31000e-01 4.268e-01 7.970273e-02
+    ## 25%7  7.40100e-02 2.012e-01 3.878258e-02
+    ## 25%8  1.95700e-01 3.040e-01 2.742220e-02
+    ## 25%9  6.61275e-02 9.744e-02 7.064628e-03
+    ## 25%10 4.79800e-01 2.873e+00 2.775560e-01
+    ## 25%11 1.47425e+00 4.885e+00 5.520633e-01
+    ## 25%12 3.36000e+00 2.198e+01 2.023593e+00
+    ## 25%13 4.52375e+01 5.422e+02 4.552239e+01
+    ## 25%14 8.15100e-03 3.113e-02 3.005158e-03
+    ## 25%15 3.24550e-02 1.354e-01 1.790259e-02
+    ## 25%16 4.21175e-02 3.960e-01 3.018291e-02
+    ## 25%17 1.47300e-02 5.279e-02 6.155788e-03
+    ## 25%18 2.33975e-02 7.895e-02 8.269529e-03
+    ## 25%19 4.55850e-03 2.984e-02 2.648062e-03
+    ## 25%20 1.87950e+01 3.604e+01 4.829018e+00
+    ## 25%21 2.96750e+01 4.954e+01 6.148512e+00
+    ## 25%22 1.25525e+02 2.512e+02 3.357133e+01
+    ## 25%23 1.08500e+03 4.254e+03 5.692780e+02
+    ## 25%24 1.46025e-01 2.226e-01 2.278293e-02
+    ## 25%25 3.39300e-01 1.058e+00 1.572729e-01
+    ## 25%26 3.83500e-01 1.252e+00 2.084945e-01
+    ## 25%27 1.61675e-01 2.910e-01 6.561368e-02
+    ## 25%28 3.18025e-01 6.638e-01 6.192187e-02
+    ## 25%29 9.20825e-02 2.075e-01 1.806821e-02
+
+These are the summary Statistics for the coloumns, in our data set.
 
 ## Results
 
@@ -309,7 +405,7 @@ ggplot(dataClean, aes(x = diagnosis)) +
   theme_minimal()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 To understand the class distribution in our dataset, we created a bar
 plot comparing the number of benign and malignant tumors. This
@@ -322,7 +418,113 @@ might become biased toward predicting the majority class (benign), so
 additional techniques like resampling or adjusting evaluation metrics
 may be considered in future modeling steps.
 
-### Visual 2 (Boxplot: Characteristics by Cancer Type)
+### Visual 2 (Histogram Overview Of All Variables In Relation To Diagnosis)
+
+``` r
+# Function to create a histogram with diagnosis coloring
+create_histogram_by_diagnosis <- function(df, column_name) {
+  # Calculate appropriate number of bins using Sturges' rule as a starting point
+  # but capped between 10 and 30 bins
+  n_distinct <- length(unique(df[[column_name]]))
+  n_bins <- min(max(ceiling(log2(n_distinct) + 1), 10), 30)
+  
+  # Create histogram with diagnosis coloring
+  p <- ggplot(df, aes(x = !!sym(column_name), fill = factor(diagnosis))) +
+    geom_histogram(bins = n_bins, 
+                   color = "black",
+                   alpha = 0.7,
+                   position = "identity") +
+    scale_fill_manual(values = c("Benign" = "green", "Malignant" = "red"),
+                      labels = c("0" = "Benign", "1" = "Malignant"),
+                      name = "Diagnosis") +
+    labs(title = column_name,
+         x = column_name,
+         y = "Frequency") +
+    theme_minimal() +
+    theme(plot.title = element_text(size = 10, face = "bold"),
+          axis.text.x = element_text(size = 8),
+          axis.text.y = element_text(size = 8),
+          axis.title = element_text(size = 9),
+          legend.position = "bottom",
+          legend.title = element_text(size = 9),
+          legend.text = element_text(size = 8))
+  
+  return(p)
+}
+
+# Create histograms for all columns with diagnosis coloring
+plot_list <- list()
+column_names <- names(dataClean)
+
+for (col_name in column_names) {
+  # Skip the diagnosis column itself and any non-numeric columns
+  if (col_name == "diagnosis" || !is.numeric(dataClean[[col_name]])) {
+    cat("Skipping column:", col_name, "\n")
+    next
+  }
+  
+  # Create and store the histogram
+  plot_list[[col_name]] <- create_histogram_by_diagnosis(dataClean, col_name)
+}
+```
+
+    ## Skipping column: diagnosis
+
+``` r
+# Arrange all histograms in a single grid with 2 columns
+# Calculate the height needed based on number of plots
+num_plots <- length(plot_list)
+grid_height <- ceiling(num_plots/2) * 3
+
+# Create a title for the grid
+title <- textGrob("Histogram Distributions by Diagnosis", 
+                 gp = gpar(fontsize = 14, fontface = "bold"))
+
+# Arrange all plots in a grid with 2 columns
+arranged_plots <- arrangeGrob(grobs = plot_list, 
+                             ncol = 2,
+                             top = title)
+
+# Display the grid (may be very tall depending on number of features)
+grid.newpage()
+grid.draw(arranged_plots)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+These graphs are just general histograms for the distributions of Benign
+and Malignant Cancer for all of the columns. We noticed that the graph
+with the biggest separation of benign and malignant was the
+`concave points_worst`, but when creating a diagnosis it is unrealistic
+to be able to use this as a variable because the only way to find a
+`*_worst` would be to check each and every cancer cell, which is
+unrealistic in a real life situation.
+
+### Visual 3 (Pairplot For \*\_mean Variables)
+
+``` r
+dataPairedPlot <- dataClean |>
+  mutate(diagnosis = recode(diagnosis, "Benign" = 0, "Malignant" = 1))
+
+pairs(dataPairedPlot[, 3:12], panel=function(x,y){
+  # Get a vector of colors for each point in the plot
+  colors <- ifelse(dataPairedPlot$diagnosis == 0, "green",
+                   ifelse(dataPairedPlot$diagnosis == 1, "red", "blue"))
+
+  # Plot the points with the corresponding colors
+  points(x, y, col = colors)
+})
+```
+
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+We looked at the Paired Plots of the ’\*\_mean’ coloumns with points
+seperated by colour based on <span style="color:green;"> Benign </span>
+or <span style="color:red;"> Malignant </span> to see what relationships
+between which variables had some corelation to weather or not the cancer
+was Benign or Malignant.
+
+### Visual 4 (Boxplot: Characteristics by Cancer Type)
 
 ``` r
 # Select all mean columns + diagnosis
@@ -342,7 +544,7 @@ mean_data %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
 # Second plot: only area_mean
@@ -353,7 +555,7 @@ ggplot(mean_data, aes(x = diagnosis, y = area_mean, fill = diagnosis)) +
   theme_minimal()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
 
 To explore which tumor characteristics differ between benign and
 malignant cases, we analyzed all `*_mean` features using side-by-side
@@ -394,7 +596,7 @@ that significantly differ between benign and malignant tumors. Such
 insights are crucial in building predictive models that can aid in early
 and accurate cancer diagnosis based on measurable tumor attributes.
 
-### Visual 3 (Histogram: Top 5 Features)
+### Visual 5 (Histogram: Top 5 Features)
 
 ``` r
 # List of top features to visualize
@@ -415,7 +617,7 @@ for (feature in top_features) {
 }
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-5-3.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-5-4.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-5-5.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-8-3.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-8-4.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-8-5.png)<!-- -->
 
 The following set of histograms displays the distribution of five
 selected tumor characteristics (`radius_mean`, `perimeter_mean`,
@@ -447,7 +649,7 @@ types. The distinct separation in their distributions provides valuable
 insight into the measurable differences that can aid in accurate
 diagnosis.
 
-### Visual 4 (Feature Correlation Heatmap)
+### Visual 6 (Feature Correlation Heatmap)
 
 ``` r
 # Convert diagnosis to numeric
@@ -471,7 +673,7 @@ ggplot(cor_df, aes(x = reorder(Feature, Correlation), y = Correlation)) +
   theme_minimal()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 The bar plot above visualizes the Pearson correlation between each
 numeric feature and the tumor diagnosis (where `0 = Benign` and
@@ -590,7 +792,7 @@ roc_obj <- roc(test_data$diagnosis_num, pred_probs)
 plot(roc_obj, main = "ROC Curve for Logistic Regression")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ``` r
 auc(roc_obj)
