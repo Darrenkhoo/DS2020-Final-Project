@@ -337,7 +337,7 @@ Similarly, `concavity_mean` and `concave points_mean` — both indicators of irr
 
 These histograms visually reinforce the idea that malignant tumors are not only larger but also more structurally irregular, and that these characteristics can be used as key indicators in distinguishing tumor types. The distinct separation in their distributions provides valuable insight into the measurable differences that can aid in accurate diagnosis.
 
-## Simple Logistric Regression Model
+## Simple Logistic Regression Model
 ```{r}
 # Split data
 set.seed(42)
