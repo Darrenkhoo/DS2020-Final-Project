@@ -403,9 +403,10 @@ set.
 ### Visual 1 (Tumor Type Distribution Bar Plot)
 
 ``` r
-# Show how many benign vs malignant cases there are
-ggplot(dataClean, aes(x = diagnosis)) +
-  geom_bar(fill = "steelblue") +
+# Bar plot with custom colors
+ggplot(dataClean, aes(x = diagnosis, fill = diagnosis)) +
+  geom_bar() +
+  scale_fill_manual(values = c("Benign" = "green", "Malignant" = "red")) +
   labs(title = "Distribution of Tumor Types", x = "Diagnosis", y = "Count") +
   theme_minimal()
 ```
@@ -423,7 +424,7 @@ might become biased toward predicting the majority class (benign), so
 additional techniques like resampling or adjusting evaluation metrics
 may be considered in future modeling steps.
 
-### Visual 2 (Feature Correlation Heatmap)
+### Visual 2 (Feature Correlation Barplot)
 
 ``` r
 # Convert diagnosis to numeric
@@ -439,11 +440,18 @@ cor_df <- data.frame(Feature = names(cor_with_diag), Correlation = cor_with_diag
 # Sort by absolute correlation
 cor_df <- cor_df %>% arrange(desc(abs(Correlation)))
 
-ggplot(cor_df, aes(x = reorder(Feature, Correlation), y = Correlation)) +
-  geom_col(fill = "steelblue") +
+cor_df$Direction <- ifelse(cor_df$Correlation >= 0, "Malignant", "Benign")
+
+ggplot(cor_df, aes(x = reorder(Feature, Correlation), y = Correlation, fill = Direction)) +
+  geom_col() +
   coord_flip() +
-  labs(title = "Correlation of Features with Diagnosis (Malignant = 1, Benign = 0)",
-       x = "Feature", y = "Pearson Correlation") +
+  scale_fill_manual(values = c("Malignant" = "red", "Benign" = "green")) +
+  labs(
+    title = "Correlation of Features with Diagnosis (Malignant = 1, Benign = -1)",
+    x = "Feature",
+    y = "Pearson Correlation",
+    fill = "Correlation Direction"
+  ) +
   theme_minimal()
 ```
 
@@ -595,7 +603,7 @@ mean_data %>%
   geom_boxplot() +
   labs(title = "Mean Characteristics (Excluding Area) by Diagnosis",
        x = "Feature", y = "Value") +
-  scale_fill_manual(values = c("Benign" = "skyblue", "Malignant" = "salmon")) +
+  scale_fill_manual(values = c("Benign" = "green", "Malignant" = "red")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
@@ -607,7 +615,7 @@ mean_data %>%
 ggplot(mean_data, aes(x = diagnosis, y = area_mean, fill = diagnosis)) +
   geom_boxplot() +
   labs(title = "Area Mean by Diagnosis", x = "Diagnosis", y = "Area Mean") +
-  scale_fill_manual(values = c("Benign" = "skyblue", "Malignant" = "salmon")) +
+  scale_fill_manual(values = c("Benign" = "green", "Malignant" = "red")) +
   theme_minimal()
 ```
 
@@ -665,7 +673,7 @@ for (feature in top_features) {
     geom_histogram(position = "identity", alpha = 0.6, bins = 30) +
     labs(title = paste("Distribution of", feature, "by Diagnosis"),
          x = feature, y = "Count") +
-    scale_fill_manual(values = c("Benign" = "skyblue", "Malignant" = "salmon")) +
+    scale_fill_manual(values = c("Benign" = "green", "Malignant" = "red")) +
     theme_minimal() +
     theme(legend.position = "top")
 
@@ -705,7 +713,7 @@ types. The distinct separation in their distributions provides valuable
 insight into the measurable differences that can aid in accurate
 diagnosis.
 
-## Simple Logistric Regression Model
+## Simple Logistic Regression Model
 
 ``` r
 # Split data
@@ -714,42 +722,33 @@ train_idx <- createDataPartition(dataClean$diagnosis_num, p = 0.8, list = FALSE)
 train_data <- dataClean[train_idx, ]
 test_data <- dataClean[-train_idx, ]
 
-# Train logistic regression using top 5 features
-log_model <- glm(diagnosis_num ~ radius_mean + perimeter_mean + area_mean + 
-                   concavity_mean + `concave points_mean`, 
+# Train logistic regression using top 3 features
+log_model <- glm(diagnosis_num ~ radius_mean + concavity_mean + `concave points_mean`, 
                  data = train_data, family = "binomial")
-```
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-``` r
 summary(log_model)
 ```
 
     ## 
     ## Call:
-    ## glm(formula = diagnosis_num ~ radius_mean + perimeter_mean + 
-    ##     area_mean + concavity_mean + `concave points_mean`, family = "binomial", 
-    ##     data = train_data)
+    ## glm(formula = diagnosis_num ~ radius_mean + concavity_mean + 
+    ##     `concave points_mean`, family = "binomial", data = train_data)
     ## 
     ## Coefficients:
     ##                       Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)            6.12554    8.17788   0.749   0.4538    
-    ## radius_mean           -2.12329    2.33922  -0.908   0.3640    
-    ## perimeter_mean        -0.01753    0.27447  -0.064   0.9491    
-    ## area_mean              0.03316    0.01403   2.364   0.0181 *  
-    ## concavity_mean        -2.10115    6.42815  -0.327   0.7438    
-    ## `concave points_mean` 91.97885   20.38786   4.511 6.44e-06 ***
+    ## (Intercept)           -13.7852     1.8442  -7.475 7.73e-14 ***
+    ## radius_mean             0.6553     0.1304   5.025 5.03e-07 ***
+    ## concavity_mean          2.9201     5.7627   0.507    0.612    
+    ## `concave points_mean`  77.0047    17.7926   4.328 1.51e-05 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
     ##     Null deviance: 609.93  on 454  degrees of freedom
-    ## Residual deviance: 164.65  on 449  degrees of freedom
-    ## AIC: 176.65
+    ## Residual deviance: 170.90  on 451  degrees of freedom
+    ## AIC: 178.9
     ## 
-    ## Number of Fisher Scoring iterations: 8
+    ## Number of Fisher Scoring iterations: 7
 
 ``` r
 # Predict probabilities
@@ -767,26 +766,26 @@ confusionMatrix(factor(pred_class), factor(test_data$diagnosis_num),
     ## 
     ##           Reference
     ## Prediction  0  1
-    ##          0 75  5
-    ##          1  5 28
+    ##          0 76  4
+    ##          1  4 29
     ##                                           
-    ##                Accuracy : 0.9115          
-    ##                  95% CI : (0.8433, 0.9567)
+    ##                Accuracy : 0.9292          
+    ##                  95% CI : (0.8653, 0.9689)
     ##     No Information Rate : 0.708           
-    ##     P-Value [Acc > NIR] : 1.288e-07       
+    ##     P-Value [Acc > NIR] : 5.872e-09       
     ##                                           
-    ##                   Kappa : 0.786           
+    ##                   Kappa : 0.8288          
     ##                                           
     ##  Mcnemar's Test P-Value : 1               
     ##                                           
-    ##             Sensitivity : 0.8485          
-    ##             Specificity : 0.9375          
-    ##          Pos Pred Value : 0.8485          
-    ##          Neg Pred Value : 0.9375          
+    ##             Sensitivity : 0.8788          
+    ##             Specificity : 0.9500          
+    ##          Pos Pred Value : 0.8788          
+    ##          Neg Pred Value : 0.9500          
     ##              Prevalence : 0.2920          
-    ##          Detection Rate : 0.2478          
+    ##          Detection Rate : 0.2566          
     ##    Detection Prevalence : 0.2920          
-    ##       Balanced Accuracy : 0.8930          
+    ##       Balanced Accuracy : 0.9144          
     ##                                           
     ##        'Positive' Class : 1               
     ## 
@@ -810,22 +809,24 @@ plot(roc_obj, main = "ROC Curve for Logistic Regression")
 auc(roc_obj)
 ```
 
-    ## Area under the curve: 0.9833
+    ## Area under the curve: 0.9826
 
 To evaluate how well the selected tumor characteristics can classify
 cancer as benign or malignant, we trained a logistic regression model
 using the five most correlated features identified during EDA:
-`radius_mean`, `perimeter_mean`, `area_mean`, `concavity_mean`, and
-`concave points_mean`. These features were chosen based on earlier
-boxplots and correlation plots, where they showed clear separation
-between the two diagnosis groups.
+`radius_mean`, `concavity_mean`, and `concave points_mean`. These
+features were chosen based on earlier boxplots and correlation plots,
+where they showed clear separation between the two diagnosis groups.
+`perimeter_mean` and `area_mean` are not included deal to
+multicollinearity with `radius_mean`, so only `radius_mean` is chosen
 
-The model achieved a high accuracy of 91.15%, with strong sensitivity
-(84.85%) and specificity (93.75%), indicating that it correctly
-identifies both malignant and benign cases in most situations. The ROC
-curve further supports the model’s performance, with an AUC (Area Under
-the Curve) of 0.9833, which is considered excellent and demonstrates the
-model’s strong discriminative power.
+The model achieved a high accuracy of 92.92%, with strong sensitivity
+87.88% and specificity 95.00%, indicating that it correctly identifies
+both malignant and benign cases in most situations. The ROC curve
+further supports the model’s performance, with an AUC (Area Under the
+Curve) of 0.9826, which is considered excellent and demonstrates the
+model’s strong discriminative power. The accuracy are testing accuracy
+and all other metrics are also test set performance.
 
 These results reinforce the potential of using imaging-derived features
 to predict cancer type, offering a less invasive and more accessible
@@ -860,9 +861,9 @@ indicators of tumor type.
 characteristics?**
 
 Yes. As demonstrated in Visual 7 (Simple Logistic Regression Model),
-using five selected features (radius_mean, perimeter_mean, area_mean,
-concavity_mean, and concave points_mean), the model achieved 91.15%
-accuracy with an AUC of 0.9833. This shows that these features can
+using three selected features (radius_mean, perimeter_mean, area_mean,
+concavity_mean, and concave points_mean), the model achieved 92.92%
+accuracy with an AUC of 0.9826. This shows that these features can
 reliably be used to predict tumor type.
 
 **4. Is it possible to speed up the process of identifying whether a
